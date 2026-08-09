@@ -42,7 +42,7 @@ duplicate publication attempts for the same SHA remain non-cancelling.
 Conflicting release tags are never rewritten.
 
 The npm trusted publisher is externally bound to organization `Plasius-LTD`,
-repository `schema`, workflow `cd.yml`, environment `production`, and action
+repository `asset-sources`, workflow `cd.yml`, environment `production`, and action
 `npm publish`. GitHub `main` and `production` policies are independent
 admission controls. The inherited rollout flag is
 `platform.public-artifact-integrity.enabled`; rollback disables `cd.yml` and
