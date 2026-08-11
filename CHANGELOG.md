@@ -4,6 +4,10 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 ## Unreleased
 
+- Added a fail-closed, version-`0.1.0`-only first-publication bootstrap that is
+  available solely through `cd.yml` and the `production` environment, refuses
+  an existing npm package, and is removed after trusted publishing is bound
+  (`#3`).
 - Phase-isolated immutable package validation from the OIDC publisher, pinned
   npm 11.6.2, and added fresh current-`main` fences before release mutation and
   npm publication.

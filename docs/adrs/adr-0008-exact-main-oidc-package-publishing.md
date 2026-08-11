@@ -46,6 +46,23 @@ Use a two-run release protocol:
    The privileged job installs no dependencies, runs no project scripts, and
    receives no npm write token.
 
+### First-publication bootstrap
+
+npm does not permit this package's trusted-publisher binding to be completed
+before the package exists. The initial `0.1.0` publication therefore uses a
+temporary, explicitly selected `bootstrap_first_publish` path inside the same
+`cd.yml` and `production` boundary. It reuses the immutable artifact, exact-main
+and exact-CI checks above, refuses any version other than `0.1.0`, and refuses
+to use the credential if the package name already exists in npm. The credential
+is short-lived, stored only in the GitHub `production` environment, materialized
+in a mode-`0600` runner-temporary user configuration, and erased on step exit.
+
+This is a one-time bootstrap, not a fallback. After `0.1.0` is verified, the
+credential is revoked, its environment secret and the bootstrap workflow path
+are removed, npm is bound to `Plasius-LTD/asset-sources`, `cd.yml`, and
+`production`, and a subsequent patch release must prove tokenless OIDC
+publication before the Task can close.
+
 Preparation runs are serialized. Publication concurrency includes the prepared
 SHA so the self-dispatched run is not blocked by its own preparation while
 duplicate publication attempts for the same SHA remain non-cancelling.
@@ -67,13 +84,16 @@ never restores token publication.
 - A moved `main`, mismatched existing package, or stale dispatch fails closed.
 - Releases use two runs and may require a fresh preparation after concurrent
   protected-branch movement.
+- The first publication temporarily carries a tightly bounded credential path;
+  release readiness is incomplete until that path is removed and OIDC is
+  proven on a later version.
 
 ## Alternatives considered
 
 - Publishing after checking out a child commit in the original run was
   rejected because provenance remains bound to the dispatch commit.
-- A token fallback was rejected because it weakens the trusted-publisher
-  boundary and makes successful authentication ambiguous.
+- A reusable or automatic token fallback was rejected because it weakens the
+  trusted-publisher boundary and makes successful authentication ambiguous.
 - One shared concurrency group was rejected because the self-dispatched
   publish run would wait behind the prepare run; unsupported queue extensions
   are not part of the GitHub Actions workflow schema.

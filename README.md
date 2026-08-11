@@ -55,7 +55,11 @@ npm run pack:check
 The release workflow publishes only an exact successful `main` commit through
 `.github/workflows/cd.yml`. npm trusts the `Plasius-LTD/asset-sources`
 repository, `cd.yml`, and the GitHub `production` environment; no local publish
-or long-lived npm write token is permitted.
+or long-lived npm write token is permitted. Because npm cannot bind a trusted
+publisher before the package exists, the initial `0.1.0` publication has a
+separately selected, package-absence-checked bootstrap path using a short-lived
+credential in `production`. That path and credential are removed immediately
+after the trusted publisher is bound and an OIDC release is proven.
 
 ## Architecture and rollout
 
