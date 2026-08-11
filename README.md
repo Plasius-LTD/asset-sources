@@ -52,7 +52,10 @@ npm run privacy:check
 npm run pack:check
 ```
 
-The release workflow publishes only an exact successful `main` commit through `.github/workflows/cd.yml`; no local publish is permitted.
+The release workflow publishes only an exact successful `main` commit through
+`.github/workflows/cd.yml`. npm trusts the `Plasius-LTD/asset-sources`
+repository, `cd.yml`, and the GitHub `production` environment; no local publish
+or long-lived npm write token is permitted.
 
 ## Architecture and rollout
 

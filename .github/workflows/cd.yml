@@ -70,7 +70,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Wait for successful exact-SHA main CI
+      - name: Enforce exact-main successful CI before publication dispatch
         env:
           EXPECTED_SHA: ${{ needs.prepare_release.outputs.commit_sha }}
           GH_TOKEN: ${{ github.token }}
@@ -187,12 +187,19 @@ jobs:
           node-version-file: ".nvmrc"
           package-manager-cache: false
 
+      - name: Install pinned npm release client
+        run: npm install --global npm@11.6.2 --ignore-scripts --registry https://registry.npmjs.org
+
       - name: Verify release runtime
         run: |
           set -euo pipefail
 
           EXPECTED_NODE="$(tr -d '[:space:]' < .nvmrc)"
           ACTUAL_NODE="$(node --version | sed 's/^v//')"
+          if [ "${ACTUAL_NODE%%.*}" != "24" ]; then
+            echo "Expected Node.js 24, found ${ACTUAL_NODE}." >&2
+            exit 1
+          fi
           if [ "${EXPECTED_NODE}" != "24.18.0" ] || [ "${ACTUAL_NODE}" != "${EXPECTED_NODE}" ]; then
             echo "Expected Node.js 24.18.0, found ${ACTUAL_NODE} with .nvmrc=${EXPECTED_NODE}." >&2
             exit 1
@@ -466,12 +473,19 @@ jobs:
           node-version-file: ".nvmrc"
           package-manager-cache: false
 
+      - name: Install pinned npm release client
+        run: npm install --global npm@11.6.2 --ignore-scripts --registry https://registry.npmjs.org
+
       - name: Verify release runtime
         run: |
           set -euo pipefail
 
           EXPECTED_NODE="$(tr -d '[:space:]' < .nvmrc)"
           ACTUAL_NODE="$(node --version | sed 's/^v//')"
+          if [ "${ACTUAL_NODE%%.*}" != "24" ]; then
+            echo "Expected Node.js 24, found ${ACTUAL_NODE}." >&2
+            exit 1
+          fi
           if [ "${EXPECTED_NODE}" != "24.18.0" ] || [ "${ACTUAL_NODE}" != "${EXPECTED_NODE}" ]; then
             echo "Expected Node.js 24.18.0, found ${ACTUAL_NODE} with .nvmrc=${EXPECTED_NODE}." >&2
             exit 1
@@ -756,6 +770,12 @@ jobs:
         run: |
           set -euo pipefail
 
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if [ "${HEAD_SHA}" != "${EXPECTED_SHA}" ]; then
+            echo "Checked-out release commit ${HEAD_SHA} differs from ${EXPECTED_SHA}." >&2
+            exit 1
+          fi
+
           git fetch origin main --no-tags
           REMOTE_MAIN="$(git rev-parse refs/remotes/origin/main)"
           if [ "${REMOTE_MAIN}" != "${EXPECTED_SHA}" ]; then
@@ -867,6 +887,26 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: ${{ steps.release.outputs.sbom_path }}
+
+      - name: Revalidate exact main immediately before npm publication
+        if: steps.release.outputs.should_publish_npm == 'true'
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_commit_sha }}
+        run: |
+          set -euo pipefail
+
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if [ "${HEAD_SHA}" != "${EXPECTED_SHA}" ]; then
+            echo "Checked-out release commit ${HEAD_SHA} differs from ${EXPECTED_SHA}." >&2
+            exit 1
+          fi
+
+          git fetch origin main --no-tags
+          REMOTE_MAIN="$(git rev-parse refs/remotes/origin/main)"
+          if [ "${REMOTE_MAIN}" != "${EXPECTED_SHA}" ]; then
+            echo "main moved to ${REMOTE_MAIN}; refusing npm publication for ${EXPECTED_SHA}." >&2
+            exit 1
+          fi
 
       - name: Publish package through npm OIDC
         if: steps.release.outputs.should_publish_npm == 'true'

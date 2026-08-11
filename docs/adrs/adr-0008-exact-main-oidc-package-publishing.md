@@ -13,6 +13,16 @@ configured a reusable long-lived npm write token.
 
 ## Decision
 
+Publication is phase-isolated: dependency installation, package validation,
+SBOM generation, and immutable tarball packing run in `validate_and_pack`
+without the `production` environment or OIDC permission. The final hosted
+`publish` job downloads only that sealed artifact, explicitly installs npm
+11.6.2, runs no repository dependency code, and publishes the tarball with
+lifecycle scripts disabled. It re-fetches current `main` immediately before
+the first release mutation and again immediately before npm publication.
+`.npmrc` contains no registry-auth placeholder, and release preparation returns
+the reviewed current `main` HEAD rather than package-file history.
+
 Use a two-run release protocol:
 
 1. An operator dispatches `cd.yml` from protected `main` with `phase: prepare`.
@@ -42,7 +52,7 @@ duplicate publication attempts for the same SHA remain non-cancelling.
 Conflicting release tags are never rewritten.
 
 The npm trusted publisher is externally bound to organization `Plasius-LTD`,
-repository `schema`, workflow `cd.yml`, environment `production`, and action
+repository `asset-sources`, workflow `cd.yml`, environment `production`, and action
 `npm publish`. GitHub `main` and `production` policies are independent
 admission controls. The inherited rollout flag is
 `platform.public-artifact-integrity.enabled`; rollback disables `cd.yml` and
