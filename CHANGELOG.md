@@ -4,6 +4,8 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 ## Unreleased
 
+- Security: Pinned patched transitive npm dependencies to clear the current audit baseline.
+
 - Added a fail-closed, version-`0.1.0`-only first-publication bootstrap that is
   available solely through `cd.yml` and the `production` environment, refuses
   an existing npm package, and is removed after trusted publishing is bound
