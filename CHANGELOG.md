@@ -4,6 +4,8 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 ## Unreleased
 
+- Security: Pinned patched transitive npm dependencies to clear the current audit baseline.
+
 - **Added**
   - (placeholder)
 
