@@ -4,6 +4,20 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 ## Unreleased
 
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.1] - 2026-08-30
+
 - Security: Pinned patched transitive npm dependencies to clear the current audit baseline.
 
 - **Added**
@@ -33,3 +47,4 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 
 [0.1.0]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.0
+[0.1.1]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.1
