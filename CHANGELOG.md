@@ -14,6 +14,7 @@ All notable changes to `@plasius/asset-sources` are documented here.
   - (placeholder)
 
 - **Security**
+  - Refreshed the lockfile to remove the vulnerable Vitest toolchain dependency chain.
   - (placeholder)
 
 ## [0.1.1] - 2026-08-30
