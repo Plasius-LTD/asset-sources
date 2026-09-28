@@ -1,6 +1,6 @@
 {
   "name": "@plasius/asset-sources",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Fail-closed provider source connector contracts and disabled registry for the Plasius asset pipeline",
   "type": "module",
   "sideEffects": false,

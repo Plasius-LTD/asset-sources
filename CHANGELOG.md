@@ -4,6 +4,20 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 ## Unreleased
 
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.2] - 2026-09-28
+
 - Limit remote npm cache exports to disposable GitHub-hosted CI jobs so persistent runner cleanup cannot delay validated releases.
 
 - Refresh npm dependency lockfile to current supported stable versions (weekly maintenance, 2026-09-28).
@@ -53,3 +67,4 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 [0.1.0]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.0
 [0.1.1]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.1
+[0.1.2]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.2
