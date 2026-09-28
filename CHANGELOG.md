@@ -4,6 +4,8 @@ All notable changes to `@plasius/asset-sources` are documented here.
 
 ## Unreleased
 
+- Refresh npm dependency lockfile to current supported stable versions (weekly maintenance, 2026-09-28).
+
 - **Added**
   - (placeholder)
 
