@@ -6,6 +6,7 @@ import {
   type ProviderSourceDescriptor,
   type ProviderAssetCandidate,
   type ProviderAssetMetadata,
+  type SupportedFormat,
   FEATURE_FLAGS,
   CAPABILITIES,
 } from "./contracts.js";
@@ -15,7 +16,17 @@ const SAFE_CURSOR = /^[A-Za-z0-9._:-]{1,256}$/u;
 const SHA256 = /^[a-f0-9]{64}$/u;
 const SOURCE_PAGE = /^https:\/\/[A-Za-z0-9.-]+(?:\/[^\s<>]*)?$/u;
 const URL_LIKE = /(?:https?:\/\/|ftp:\/\/|file:\/\/|data:|javascript:|\\\\|\/\/)/iu;
+const URL_SHAPED_TEXT = /(?:(?:https?|ftp|file):\/\/|data:|javascript:|\\\\|\/\/)[^\s<>"'`]+/giu;
 const MARKUP = /<\/?[A-Za-z][^>]*>/gu;
+const SUPPORTED_FORMATS = new Set<SupportedFormat>([
+  "glb",
+  "gltf",
+  "fbx",
+  "obj",
+  "blend",
+  "zip",
+  "unknown",
+]);
 
 export class SourceValidationError extends Error {
   readonly code: string;
@@ -104,7 +115,7 @@ export function sanitizeUntrustedText(value: unknown, maxLength: number): string
   return value
     .normalize("NFKC")
     .replace(MARKUP, "[redacted-markup]")
-    .replace(URL_LIKE, "[redacted-url]")
+    .replace(URL_SHAPED_TEXT, "[redacted-url]")
     .slice(0, maxLength);
 }
 
@@ -125,31 +136,45 @@ export function validateChecksum(value: unknown): string {
 export function validateDescriptor(
   descriptor: ProviderSourceDescriptor,
 ): ProviderSourceDescriptor {
-  validateProviderId(descriptor.providerId);
-  sanitizeUntrustedText(descriptor.displayName, 80);
+  const providerId = validateProviderId(descriptor.providerId);
+  const displayName = sanitizeUntrustedText(descriptor.displayName, 80);
   if (descriptor.parentFeatureFlag !== FEATURE_FLAGS.parent) {
     throw new SourceValidationError("invalid-parent-feature-flag");
   }
   if (!descriptor.featureFlag.startsWith("asset.pipeline.provider.")) {
     throw new SourceValidationError("invalid-provider-feature-flag");
   }
-  if (!descriptor.requiredCapabilities.includes(CAPABILITIES.sourceManage)) {
+  if (
+    !Array.isArray(descriptor.requiredCapabilities) ||
+    !descriptor.requiredCapabilities.includes(CAPABILITIES.sourceManage)
+  ) {
     throw new SourceValidationError("missing-source-capability");
   }
   if (descriptor.sourceReview !== "approved" || descriptor.enabled !== false) {
     throw new SourceValidationError("descriptor-must-be-disabled-until-approved");
   }
-  if (descriptor.rightsPolicy === "not-approved") {
+  if (
+    descriptor.rightsPolicy !== "commercial-redistribution" &&
+    descriptor.rightsPolicy !== "commercial-with-attribution"
+  ) {
     throw new SourceValidationError("descriptor-rights-not-approved");
   }
-  if (descriptor.supportedFormats.length === 0) {
-    throw new SourceValidationError("missing-format-matrix");
+  if (!Array.isArray(descriptor.operationalGates) || descriptor.operationalGates.length === 0) {
+    throw new SourceValidationError("missing-operational-gates");
   }
   return deepFreeze({
-    ...descriptor,
-    requiredCapabilities: [...descriptor.requiredCapabilities],
-    operationalGates: [...descriptor.operationalGates],
-    supportedFormats: [...descriptor.supportedFormats],
+    providerId,
+    displayName,
+    enabled: false,
+    featureFlag: descriptor.featureFlag,
+    parentFeatureFlag: FEATURE_FLAGS.parent,
+    requiredCapabilities: descriptor.requiredCapabilities.map((capability) =>
+      validateOpaque(capability, "invalid-source-capability")),
+    operationalGates: descriptor.operationalGates.map((gate) =>
+      validateOpaque(gate, "invalid-operational-gate")),
+    sourceReview: descriptor.sourceReview,
+    rightsPolicy: descriptor.rightsPolicy,
+    supportedFormats: normalizeSupportedFormats(descriptor.supportedFormats),
   });
 }
 
@@ -171,21 +196,23 @@ export function normalizeCandidate(
   if (candidate.providerId !== expectedProviderId) {
     throw new SourceValidationError("provider-mismatch");
   }
+  const rights = normalizeRightsEvidence(candidate.rights);
   const rightsApproved =
-    candidate.rights.state === "approved" &&
-    (candidate.rights.policy === "commercial-redistribution" ||
-      candidate.rights.policy === "commercial-with-attribution");
+    rights.state === "approved" &&
+    (rights.policy === "commercial-redistribution" ||
+      rights.policy === "commercial-with-attribution");
+  if (candidate.disposition !== "eligible" && candidate.disposition !== "quarantined") {
+    throw new SourceValidationError("invalid-candidate-disposition");
+  }
   return deepFreeze({
-    ...candidate,
+    providerId: expectedProviderId,
+    assetId: validateAssetIdentifier(candidate.assetId),
     title: sanitizeUntrustedText(candidate.title, 256),
     description: sanitizeUntrustedText(candidate.description, 4096),
     sourcePage: validateSourcePage(candidate.sourcePage),
     revision: validateRevision(candidate.revision),
-    rights: {
-      ...candidate.rights,
-      evidenceRevision: validateRevision(candidate.rights.evidenceRevision),
-    },
-    supportedFormats: [...candidate.supportedFormats],
+    rights,
+    supportedFormats: normalizeSupportedFormats(candidate.supportedFormats),
     disposition: rightsApproved ? candidate.disposition : "quarantined",
   });
 }
@@ -218,4 +245,36 @@ function containsControl(value: string): boolean {
     const codePoint = character.codePointAt(0) ?? 0;
     return codePoint <= 0x1f || codePoint === 0x7f;
   });
+}
+
+function normalizeRightsEvidence(rights: RightsEvidence): RightsEvidence {
+  if (
+    !rights ||
+    (rights.state !== "approved" && rights.state !== "unknown" && rights.state !== "changed") ||
+    (rights.policy !== "commercial-redistribution" &&
+      rights.policy !== "commercial-with-attribution" &&
+      rights.policy !== "not-approved") ||
+    typeof rights.attributionRequired !== "boolean"
+  ) {
+    throw new SourceValidationError("invalid-rights-evidence");
+  }
+  return deepFreeze({
+    state: rights.state,
+    policy: rights.policy,
+    evidenceRevision: validateRevision(rights.evidenceRevision),
+    attributionRequired: rights.attributionRequired,
+  });
+}
+
+function normalizeSupportedFormats(formats: readonly SupportedFormat[]): readonly SupportedFormat[] {
+  if (
+    !Array.isArray(formats) ||
+    formats.length === 0 ||
+    formats.length > SUPPORTED_FORMATS.size ||
+    formats.some((format) => !SUPPORTED_FORMATS.has(format)) ||
+    new Set(formats).size !== formats.length
+  ) {
+    throw new SourceValidationError("unsupported-source-format");
+  }
+  return Object.freeze([...formats]);
 }

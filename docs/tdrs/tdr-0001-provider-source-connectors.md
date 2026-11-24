@@ -19,3 +19,7 @@ Malformed or unsafe input throws a stable typed validation error. Unknown or cha
 ## Verification
 
 Contract tests cover registry gates, duplicate entries, URL/path safety, untrusted text redaction, deep immutability, disabled providers, acquisition idempotency, private staging, and the public package inventory.
+
+## Response normalization
+
+Normalize descriptors, rights and candidates into explicit public fields. Validate receipts before checkpoint writes and validate checkpoint identity on retry. Bind staging references to validated acquisition metadata. These checks use the existing package validation and freezing helpers, retaining public signatures and disabled provider rollout defaults.

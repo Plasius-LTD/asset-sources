@@ -68,3 +68,7 @@ after the trusted publisher is bound and an OIDC release is proven.
 - [Connector design](./docs/design/asset-source-connectors.md)
 
 The inherited template files in this repository provide the legal, security, contribution, workflow, and public-artifact integrity baseline required for `@plasius/*` packages.
+
+## Connector response validation
+
+Connectors reconstruct descriptors and candidates from allowed fields, redact complete URL-shaped provider text, and enforce requested result limits. Acquisition receipts must match the provider, asset and requested revision; conflicting checkpoint reuse fails. Staging references must match the acquired checksum, media type and size, with a canonical expiry. Public method signatures and default-disabled providers are unchanged.

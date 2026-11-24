@@ -11,7 +11,7 @@ All notable changes to `@plasius/asset-sources` are documented here.
   - (placeholder)
 
 - **Fixed**
-  - (placeholder)
+  - Validate provider descriptors, candidates, acquisition checkpoints and staged content before exposing connector results; redact complete URL-shaped provider text.
 
 - **Security**
   - (placeholder)
