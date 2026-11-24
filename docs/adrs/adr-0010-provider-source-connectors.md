@@ -22,3 +22,7 @@ Untrusted provider text is bounded and normalized; URL-shaped text is redacted. 
 ## Impact and release
 
 The package is additive and has no runtime dependency. Provider Features can implement the ports without coupling to site or dashboard code. The package is published by the exact-main-SHA npm CD workflow after CI, coverage, audit, privacy, and pack checks pass.
+
+## Validated response boundary
+
+Connector responses are reconstructed from allowed fields rather than forwarding provider objects. Descriptors, rights, formats, result limits, acquisition identity/revision/status and staged-content metadata are validated before return or checkpoint storage. This extends the existing safe-port boundary without adding provider implementations or enabling rollout flags. Regression tests exercise malformed responses and conflicting checkpoint reuse.
