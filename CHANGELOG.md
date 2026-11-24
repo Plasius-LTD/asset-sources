@@ -8,6 +8,20 @@ All notable changes to `@plasius/asset-sources` are documented here.
   - (placeholder)
 
 - **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.8] - 2026-11-24
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
   - Enforce the required 80% statement and branch coverage gates for connector validation.
 
 - **Fixed**
@@ -153,3 +167,4 @@ All notable changes to `@plasius/asset-sources` are documented here.
 [0.1.5]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.5
 [0.1.6]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.6
 [0.1.7]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.7
+[0.1.8]: https://github.com/Plasius-LTD/asset-sources/releases/tag/v0.1.8
