@@ -8,7 +8,7 @@ All notable changes to `@plasius/asset-sources` are documented here.
   - (placeholder)
 
 - **Changed**
-  - (placeholder)
+  - Enforce the required 80% statement and branch coverage gates for connector validation.
 
 - **Fixed**
   - Validate provider descriptors, candidates, acquisition checkpoints and staged content before exposing connector results; redact complete URL-shaped provider text.
